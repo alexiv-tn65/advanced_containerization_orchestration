@@ -1,0 +1,36 @@
+# Плохой Dockerfile
+# Использование тега latest делает образ нестабильным
+FROM python:latest  
+
+# Создаем нового пользователя
+RUN useradd -m -s /bin/bash jupyteruser
+
+# Установка пакетов без очистки кэша и без использования --no-install-recommends
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    git \
+    && pip install jupyter pandas numpy matplotlib
+
+# Устанавливает необходимые пакеты в разных командах
+RUN apt -y install nano
+
+# Открываем порт 8888 для доступа к Jupyter Notebook
+EXPOSE 8888
+
+# Создаём конфигурационный файл для Jupyter Notebook
+RUN mkdir -p /home/jupyteruser/.jupyter && \
+    echo "c.NotebookApp.ip = '0.0.0.0'" >> /home/jupyteruser/.jupyter/jupyter_notebook_config.py && \
+    echo "c.NotebookApp.port = 8888" >> /home/jupyteruser/.jupyter/jupyter_notebook_config.py && \
+    echo "c.NotebookApp.token = ''" >> /home/jupyteruser/.jupyter/jupyter_notebook_config.py
+
+# Установка рабочего каталога
+WORKDIR /home/jupyteruser
+
+# Создание volume, но без понятного указания точки монтирования
+VOLUME [.]
+
+# Переключаемся на нового пользователя
+USER jupyteruser
+
+# Запуск приложения без указания уровня логирования
+ENTRYPOINT ["jupyter", "notebook", "--config=/home/jupyteruser/.jupyter/jupyter_notebook_config.py"]
