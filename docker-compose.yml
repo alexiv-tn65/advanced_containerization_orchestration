@@ -1,0 +1,51 @@
+version: '3.8'  # Указываем версию Docker Compose
+
+services:
+  init_service:  # Инициализационный сервис
+    build:
+      context: .  # Контекст сборки - текущая директория
+      dockerfile: Dockerfile  # Используем Dockerfile из текущей директории
+    container_name: my_init_service  # Явное имя контейнера
+    command: ["sh", "-c", "echo 'Initialization complete'"]  # Команда для выполнения (инициализация)
+    networks:
+      - my_network  # Подключаем к сети my_network
+
+  app_service:  # Основной сервис приложения
+    build:
+      context: .  # Контекст сборки - текущая директория
+      dockerfile: Dockerfile  # Используем тот же Dockerfile
+    container_name: my_app_service  # Явное имя контейнера
+    ports:
+      - "8888:8888"  # Прокидываем порт 8888 наружу для доступа к Jupyter Notebook
+    volumes:
+      - app_data:/data  # Монтируем volume для хранения данных приложения
+    depends_on:
+      - init_service  # Зависит от init_service, который должен быть запущен первым
+    networks:
+      - my_network  # Подключаем к сети my_network
+    healthcheck:  # Проверка состояния контейнера
+      test: ["CMD", "curl", "-f", "http://localhost:8888"]  # Проверяем доступность Jupyter Notebook
+      interval: 30s  # Интервал между проверками
+      timeout: 10s   # Таймаут для каждой проверки
+      retries: 5     # Количество неудачных попыток перед пометкой как unhealthy
+
+  db_service:  # Сервис базы данных PostgreSQL
+    image: postgres:13  # Используем официальный образ PostgreSQL версии 13
+    container_name: my_db_service  # Явное имя контейнера
+    environment:  # Переменные окружения для настройки базы данных
+      POSTGRES_USER: ${DB_USER}       # Имя пользователя базы данных из .env файла
+      POSTGRES_PASSWORD: ${DB_PASSWORD} # Пароль пользователя базы данных из .env файла
+      POSTGRES_DB: ${DB_NAME}           # Имя базы данных из .env файла
+    volumes:
+      - db_data:/var/lib/postgresql/data  # Монтируем volume для хранения данных PostgreSQL
+    networks:
+      - my_network  # Подключаем к сети my_network
+
+volumes:
+  app_data:   # Объявляем volume для приложения
+  db_data:    # Объявляем volume для базы данных
+
+networks:
+  my_network:   # Объявляем сеть, к которой будут подключены все сервисы
+
+
