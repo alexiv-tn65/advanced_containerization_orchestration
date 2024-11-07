@@ -1,0 +1,10 @@
+apiVersion: v1  # Версия API Kubernetes, используемая для создания объекта
+kind: ConfigMap  # Тип объекта, который мы создаем (ConfigMap)
+metadata:
+  name: postgres-configmap  # Имя ConfigMap, используемое для его идентификации
+  labels:
+    app: postgres  # Метка для группировки и идентификации объектов в Kubernetes
+data:
+  POSTGRES_DB: "postgres"  # Имя базы данных, которая будет создана в PostgreSQL
+  POSTGRES_USER: "postgres"  # Имя пользователя для подключения к базе данных
+  POSTGRES_PASSWORD: "test123@password"  # Пароль для указанного пользователя
