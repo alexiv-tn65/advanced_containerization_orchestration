@@ -7,9 +7,6 @@ metadata:
 type: Opaque  # Тип секрета, указывающий, что данные не имеют специального формата.
 stringData:
   NEXTCLOUD_ADMIN_PASSWORD: "next879rtfpass@"  # Пароль администратора Nextcloud.
-  POSTGRES_DB: "postgres"  # Имя базы данных Nextcloud, замените по желанию
-  POSTGRES_USER: "postgres"  # Имя пользователя базы данных, замените по желанию
-  POSTGRES_PASSWORD: "test123@password"  # Пароль для базы данных, замените на свой
 ---
 kind: Deployment
 apiVersion: apps/v1
@@ -66,7 +63,7 @@ spec:
                   name: postgres-configmap  # Ссылка на ConfigMap для получения пароля пользователя базы данных.
                   key: POSTGRES_PASSWORD
             - name: NEXTCLOUD_ADMIN_USER
-              value: any_name_you_want  # Имя администратора Nextcloud. Замените на желаемое имя.
+              value: name_for_nextcloud_admin  # Имя администратора Nextcloud. Замените на желаемое имя.
             - name: NEXTCLOUD_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
