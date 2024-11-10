@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nextcloud-secret  # Название секрета, который содержит конфиденциальные данные для Nextcloud.
+  labels:
+    app: nextcloud  # Метка для идентификации приложения, к которому относится секрет.
+type: Opaque  # Тип секрета, указывающий, что данные не имеют специального формата.
+stringData:
+  NEXTCLOUD_ADMIN_PASSWORD: "next879rtfpass@"  # Пароль администратора Nextcloud.
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nextcloud  # Название развертывания для Nextcloud.
+  labels:
+    app: nextcloud  # Метка для идентификации приложения в Kubernetes.
+spec:
+  replicas: 1  # Количество реплик (экземпляров) приложения, которые будут запущены.
+  selector:
+    matchLabels:
+      app: nextcloud  # Условие для выбора подов, соответствующих этому развертыванию.
+  template:
+    metadata:
+      labels:
+        app: nextcloud  # Метка, которая будет применена к создаваемым подам.
+    spec:
+      containers:
+        - name: nextcloud  # Имя контейнера с приложением Nextcloud.
+          image: docker.io/nextcloud:stable-apache  # Образ Docker для Nextcloud с Apache.
+          resources:
+            limits:
+              cpu: 500m  # Максимальное количество CPU, которое может использовать контейнер.
+              memory: 256Mi  # Максимальное количество памяти, которое может использовать контейнер.
+            requests:
+              cpu: 250m  # Минимальное количество CPU, которое будет выделено контейнеру.
+              memory: 128Mi  # Минимальное количество памяти, которое будет выделено контейнеру.
+          ports:
+            - name: http
+              containerPort: 80  # Порт, на котором приложение будет доступно внутри контейнера.
+              protocol: TCP
+          env:
+            - name: NEXTCLOUD_UPDATE
+              valueFrom:
+                configMapKeyRef:
+                  name: nextcloud-config
+                  key: NEXTCLOUD_UPDATE  # Переменная окружения для автоматических обновлений Nextcloud.
+            - name: ALLOW_EMPTY_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: nextcloud-config
+                  key: ALLOW_EMPTY_PASSWORD  # Разрешение использования пустых паролей для пользователей (не рекомендуется в продакшене).
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: nextcloud-config
+                  key: POSTGRES_HOST  # Имя сервиса PostgreSQL для подключения к базе данных.
+            - name: NEXTCLOUD_TRUSTED_DOMAINS
+              valueFrom:
+                configMapKeyRef:
+                  name: nextcloud-config
+                  key: NEXTCLOUD_TRUSTED_DOMAINS  # Доверенные домены для доступа к Nextcloud.
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-configmap  # Ссылка на ConfigMap для получения имени базы данных.
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER  # Имя пользователя для подключения к базе данных PostgreSQL.
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD  # Пароль пользователя для подключения к базе данных PostgreSQL.
+            - name: NEXTCLOUD_ADMIN_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: nextcloud-config 
+                  key: NEXTCLOUD_ADMIN_USER  # Имя администратора Nextcloud. 
+            - name: NEXTCLOUD_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud-secret 
+                  key: NEXTCLOUD_ADMIN_PASSWORD  # Пароль администратора Nextcloud из секрета.
+
+          livenessProbe:
+            httpGet:
+              path: /index.php/apps/dashboard/
+              port: 80
+            initialDelaySeconds: 30  # Задержка перед первой проверкой(в секундах).
+            periodSeconds: 30  # Интервал между проверками (в секундах).
+
+          readinessProbe:
+            httpGet:
+              path: /index.php/apps/dashboard/
+              port: 80
+            initialDelaySeconds: 5   # Задержка перед первой проверкой готовности (в секундах).
+            periodSeconds: 10         # Интервал между проверками готовности (в секундах).
+
+          imagePullPolicy: IfNotPresent   # Политика извлечения образа (не извлекать, если образ уже есть).
+      restartPolicy: Always   # Политика перезапуска подов (всегда перезапускать при сбое).
+      dnsPolicy: ClusterFirst   # Политика DNS (использовать DNS-кластер в первую очередь).

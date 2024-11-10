@@ -51,7 +51,7 @@ spec:
                   name: postgres-configmap  # Ссылка на ConfigMap для получения имени базы данных.
                   key: POSTGRES_DB
             - name: NEXTCLOUD_TRUSTED_DOMAINS
-              value: "127.0.0.1"  # Доверенные домены для доступа к Nextcloud (добавьте свои домены).
+              value: "127.0.0.1"  # Доверенные домены для доступа к Nextcloud (можно добавить свои домены).
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
