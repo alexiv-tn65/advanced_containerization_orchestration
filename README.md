@@ -130,4 +130,32 @@ kubectl delete pod nextcloud-d8d8c874f-jffzs
 Т.е. вероятно  Nextcloud не пытался подключиться к  БД после того как был создан новый под с экземпляром PostgreSQL, после того как пересоздали под Nextcloud он подключился и все заработало.
 
 
+#### Осуществить махинации над манифестами из примера    
+
+Удалить старые поды, деплойменты и т.д.:      
+kubectl delete pod --all   
+kubectl delete deployment --all    
+kubectl delete service --all   
+
+Примените новые манифесты   
+kubectl apply -f pg_secret.yml   
+kubectl apply -f pg_configmap.yml     
+kubectl apply -f pg_service.yml   
+kubectl apply -f pg_deployment.yml   
+kubectl apply -f nextcloud_configmap.yml   
+kubectl apply -f nextcloud.yml     
+
+Проверить статус подов   
+kubectl get pods   
+
+kubectl logs <имя_пода_nextcloud>    
+kubectl logs <имя_пода_postgres>   
+
+![-](images/23.png)   
+
+
+kubectl expose deployment nextcloud --type=NodePort --port=80     
+minikube service nextcloud    
+
+![-](images/24.png)  
 
