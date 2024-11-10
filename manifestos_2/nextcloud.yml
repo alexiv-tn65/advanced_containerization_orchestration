@@ -48,15 +48,15 @@ spec:
         imagePullPolicy: IfNotPresent
         readinessProbe:
           httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
+            path: /  # Путь запроса для проверки готовности
+            port: 80  # Порт, на котором будет выполняться проверка готовности
+          initialDelaySeconds: 5  # Задержка перед первой проверкой готовности (в секундах)
+          periodSeconds: 10  # Интервал между проверками готовности (в секундах)
+        livenessProbe:  # Проверка работоспособности контейнера
           httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 15
-          periodSeconds: 20
-      restartPolicy: Always
-      dnsPolicy: ClusterFirst
+            path: /  # Путь запроса для проверки работоспособности
+            port: 80  # Порт, на котором будет выполняться проверка работоспособности
+          initialDelaySeconds: 15   # Задержка перед первой проверкой работоспособности (в секундах)
+          periodSeconds: 20         # Интервал между проверками работоспособности (в секундах)
+      restartPolicy: Always   # Политика перезапуска подов (всегда перезапускать при сбое)
+      dnsPolicy: ClusterFirst   # Политика DNS (использовать DNS-кластер в первую очередь)
