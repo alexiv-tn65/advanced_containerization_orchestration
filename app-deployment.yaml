@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-service
+  template:
+    metadata:
+      labels:
+        app: app-service
+        environment: production
+    spec:
+      containers:
+        - name: jupyter-notebook
+          image: my-jupyter-notebook
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8888
+          volumeMounts:
+            - name: app-storage
+              mountPath: /data
+          env:
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_PASSWORD
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8888
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      initContainers:
+        - name: init-container
+          image: alpine:latest
+          command: ["sh", "-c", "echo 'Initialization complete'"]
+      volumes:
+        - name: app-storage
+          emptyDir: {}
