@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jupyter-notebook-service 
+  labels:
+    app: jupyter-notebook  
+    tier: frontend
+spec:
+  type: NodePort # тип сервиса
+  ports:
+  - port: 8888 
+    targetPort: 8888 
+    nodePort: 30000
+  selector:
+    app: jupyter-notebook 

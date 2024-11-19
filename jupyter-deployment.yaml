@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyter-notebook-deployment
+  labels: # задаем метки
+    app: jupyter-notebook
+    tier: frontend
+spec:
+  replicas: 1 # количество реплик
+  selector:
+    matchLabels:
+      app: jupyter-notebook
+  template:
+    metadata:
+      labels:
+        app: jupyter-notebook
+        tier: frontend
+    spec:
+      containers:
+      - name: jupyter-notebook
+        image: my-jupyter-notebook # имя собранного образа
+        imagePullPolicy: Never # явно указываем, что образ не будет загружаться из реестра
+        ports:
+        - containerPort: 8888 # порт контейнера
+        env: # переменные окружения
+        - name: JUPYTER_ENABLE_LAB
+          valueFrom:
+            configMapKeyRef: # ссылка на конфиг-мап
+              name: jupyter-postgres-config # имя конфиг-мап
+              key: JUPYTER_ENABLE_LAB # ключ в конфиг-мапе
+      initContainers: # контейнер-инициализатор
+        - name: init-container
+          image: alpine:latest # образ для инициализации
+          command: ["sh", "-c", "echo 'Initialization complete'"] # команда для инициализации
