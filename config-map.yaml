@@ -2,5 +2,11 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: jupyter-postgres-config
+  labels:
+    app: jupyter-notebook
+    tier: frontend
+    environment: production
+    version: v1.0
+    owner: dev-team
 data:
   JUPYTER_ENABLE_LAB: "yes"

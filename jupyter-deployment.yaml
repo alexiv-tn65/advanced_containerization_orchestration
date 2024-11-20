@@ -34,7 +34,26 @@ spec:
             configMapKeyRef: # ссылка на конфиг-мап
               name: jupyter-postgres-config # Используем созданный ConfigMap
               key: JUPYTER_ENABLE_LAB # ключ в конфиг-мапе
-      initContainers: # контейнер-инициализатор
-        - name: init-container # имя init-контейнера
-          image: alpine:latest # образ для инициализации
-          command: ["sh", "-c", "echo 'Initialization complete'"] # команда для инициализации
+        - name: DATABASE_URL # Формируем URL подключения к базе данных
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres-service:5432/$(POSTGRES_DB)"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+      initContainers: # контейнеры-инициализаторы
+      - name: wait-for-postgres # Инициализирующий контейнер для ожидания PostgreSQL
+        image: busybox
+        command: ['sh', '-c', 'for i in {1..30}; do nc -z postgres-service 5432 && echo \
+        "Initialization complete: PostgreSQL database is operational." && exit 0; echo waiting for postgres; \
+        sleep 5; done; echo "PostgreSQL did not start in time!"; exit 1']
