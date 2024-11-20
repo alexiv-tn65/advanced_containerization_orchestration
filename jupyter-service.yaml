@@ -8,8 +8,8 @@ metadata:
 spec:
   type: NodePort # тип сервиса
   ports:
-  - port: 8888 
-    targetPort: 8888 
-    nodePort: 30000
+  - port: 8888 # порт, на котором сервис будет доступен внутри кластера
+    targetPort: 8888  # порт, на который будет перенаправлен трафик к контейнеру
+    nodePort: 30000 # порт на узле, по которому сервис будет доступен извне
   selector:
-    app: jupyter-notebook 
+    app: jupyter-notebook # селектор, который связывает сервис с подами, имеющими метку app=jupyter-notebook
