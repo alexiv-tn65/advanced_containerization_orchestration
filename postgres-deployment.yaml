@@ -38,8 +38,8 @@ spec:
         ports:
         - containerPort: 5432
         volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: postgres-storage
+        - mountPath: /var/lib/postgresql/data # путь внутри контейнера, где будет доступен volume
+          name: postgres-storage # имя volume, который будет смонтирован в контейнере
         readinessProbe:
           exec:
             command:
@@ -49,7 +49,7 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 10
 
-      volumes: # создаем volume
-      - name: postgres-storage
-        persistentVolumeClaim: # ссылка на PVC
-          claimName: postgres-pvc
+      volumes: # создаем volume для пода
+      - name: postgres-storage # имя volume, который будет использоваться в контейнерах пода
+        persistentVolumeClaim: # ссылка на PersistentVolumeClaim (PVC)
+          claimName: postgres-pvc # имя PVC, который будет использоваться для предоставления хранилища

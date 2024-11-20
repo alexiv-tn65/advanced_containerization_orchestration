@@ -13,15 +13,15 @@ spec:
   template:
     metadata:
       labels:
-        app: jupyter-notebook
+        app: jupyter-notebook # метки, которые будут применены к создаваемым подам
         tier: frontend
     spec:
       containers:
-      - name: jupyter-notebook
-        image: my-jupyter-notebook # имя собранного образа
-        imagePullPolicy: Never # явно указываем, что образ не будет загружаться из реестра
+      - name: jupyter-notebook # имя контейнера
+        image: my-jupyter-notebook # имя собранного образа Docker для Jupyter Notebook
+        imagePullPolicy: Never # явно указываем, что образ не будет загружаться из реестра, а используется локально
         ports:
-        - containerPort: 8888 # порт контейнера
+        - containerPort: 8888 # порт, на котором контейнер будет слушать входящие запросы (стандартный порт для Jupyter Notebook)
         env: # переменные окружения
         - name: JUPYTER_ENABLE_LAB
           valueFrom:
@@ -29,6 +29,6 @@ spec:
               name: jupyter-postgres-config # имя конфиг-мап
               key: JUPYTER_ENABLE_LAB # ключ в конфиг-мапе
       initContainers: # контейнер-инициализатор
-        - name: init-container
+        - name: init-container # имя init-контейнера
           image: alpine:latest # образ для инициализации
           command: ["sh", "-c", "echo 'Initialization complete'"] # команда для инициализации
