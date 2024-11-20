@@ -5,6 +5,8 @@ metadata:
   labels:
     app: postgres
     tier: database
+    environment: production 
+    owner: dev-team 
 spec:
   type: ClusterIP
   ports:
