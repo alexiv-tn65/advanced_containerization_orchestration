@@ -4,12 +4,12 @@
 
 This repository contains four laboratory works related to containerization and orchestration, each in a separate branch.
 
-### Branches
+### Branches:
 
-- **Lab 1**: `lab1`
-- **Lab 2**: `lab2`
-- **Lab 3**: `lab3`
-- **Lab 4**: `lab4`
+- **Lab 1**: `lab1` [branch lab1 ](https://github.com/alexiv-tn65/containerization_orchestration/tree/lab1)
+- **Lab 2**: `lab2` [branch lab2 ](https://github.com/alexiv-tn65/containerization_orchestration/tree/lab2)
+- **Lab 3**: `lab3` [branch lab3 ](https://github.com/alexiv-tn65/containerization_orchestration/tree/lab3)
+- **Lab 4**: `lab4` [branch lab4 ](https://github.com/alexiv-tn65/containerization_orchestration/tree/lab4)
 
 #### Ход выполнения
 
@@ -19,13 +19,14 @@ This repository contains four laboratory works related to containerization and o
 minikube start
 ```
 
-2. Собираем кастомный образ `my-jupyter-notebook`
+2. Собираем кастомный образ `my-jupyter-notebook` на основе инструкций, указанных в Dockerfile, который находится в текущем каталоге (обозначенном точкой .).
 
 ```bash
 minikube image build -t my-jupyter-notebook .
 ```
 
-3. Запускаем сервис
+3. Запускаем сервис  
+Применение конфигураций в Kubernetes:   
 
 ```bash
 kubectl apply -f config-map.yaml
@@ -35,18 +36,39 @@ kubectl apply -f jupyter-deployment.yaml
 kubectl apply -f postgres-deployment.yaml
 kubectl apply -f postgres-service.yaml
 kubectl apply -f jupyter-service.yaml
-```
+```  
 
-4. Получаем адрес сервиса
+Проверка статуса подов:  
+kubectl get pods  
+
+Проверка логов подов:   
+kubectl logs <имя_пода>  
+
+Проверка конфигураций:    
+kubectl get configmaps    
+kubectl get secrets   
+
+4. Туннелирование трафика между нодой minikube и upyter-notebook-service, тестирование доступа к сервису:  
 
 ```bash
-minikube service jupyter-notebook-service --url
+minikube service jupyter-notebook-service --url 
 ```
 
 
-## Проверяем статусы
+## Проверяем статусы   
 
-![logs](img/get_logs.png)
+
+Проверка логов init-контейнера:    
+kubectl logs <имя_пода> -c init-container   
+
+
+![logs](img/get_logs.png)   
+
+Получение списка всех подов с метками:    
+kubectl get pods --show-labels    
+
+Получение меток конкретного пода
+kubectl get pod <имя_пода> --show-labels
 
 ![pods](img/get_pods.png)
 
