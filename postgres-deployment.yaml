@@ -3,8 +3,11 @@ kind: Deployment
 metadata:
   name: postgres-deployment
   labels: # указываем метки
-    app: postgres
-    tier: database
+    app: postgres # Название приложения
+    tier: database # Уровень приложения (база данных)
+    environment: production # Среда развертывания (продакшн)
+    version: v1.0 # Версия приложения
+    owner: dev-team # Команда, ответственная за приложение
 spec:
   replicas: 1
   selector:
@@ -14,7 +17,10 @@ spec:
     metadata:
       labels:
         app: postgres
-        tier: database
+        tier: database # Уровень приложения для подов
+        environment: production # Среда развертывания для подов
+        version: v1.0 # Версия приложения для подов
+        owner: dev-team # Ответственная команда для подов
     spec:
       containers:
       - name: postgres
@@ -46,8 +52,16 @@ spec:
             - sh
             - -c
             - "PGPASSWORD=$POSTGRES_PASSWORD psql -U $POSTGRES_USER -d $POSTGRES_DB -c 'SELECT 1;'"
-          initialDelaySeconds: 5
+          initialDelaySeconds: 10
           periodSeconds: 10
+        livenessProbe: # livenessProbe для проверки работоспособности контейнера
+          exec:
+            command:
+            - sh
+            - -c
+            - "PGPASSWORD=$POSTGRES_PASSWORD psql -U $POSTGRES_USER -d $POSTGRES_DB -c 'SELECT 1;'"
+          initialDelaySeconds: 35 # Задержка перед первой проверкой liveness (должна быть больше времени, необходимого для инициализации базы данных)
+          periodSeconds: 15 # Интервал между проверками liveness
 
       volumes: # создаем volume для пода
       - name: postgres-storage # имя volume, который будет использоваться в контейнерах пода

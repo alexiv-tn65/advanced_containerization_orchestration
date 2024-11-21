@@ -2,6 +2,11 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
+  labels: # Указываем метки для идентификации и организации ресурса
+    app: postgres # Название приложения, к которому относится PVC
+    tier: database # Уровень приложения (база данных)
+    environment: production # Среда развертывания (продакшн)
+    owner: dev-team # Команда, ответственная за приложение
 spec:
   accessModes: # задаем режим доступа
     - ReadWriteOnce # чтение-запись

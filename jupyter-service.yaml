@@ -5,6 +5,9 @@ metadata:
   labels:
     app: jupyter-notebook  
     tier: frontend
+    environment: production
+    version: v1.0
+    owner: dev-team
 spec:
   type: NodePort # тип сервиса
   ports:
