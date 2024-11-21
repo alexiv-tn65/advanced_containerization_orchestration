@@ -59,7 +59,8 @@ minikube service jupyter-notebook-service --url
 
 
 Проверка логов init-контейнера:    
-kubectl logs <имя_пода> -c init-container   
+
+ <имя_пода> -c wait-for-postgres 
 
 
 ![logs](img/get_logs.png)   
