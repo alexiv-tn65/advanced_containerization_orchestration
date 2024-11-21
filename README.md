@@ -65,11 +65,12 @@ kubectl logs <имя_пода> -c wait-for-postgres
 
 ![logs](img/get_logs_new.png)   
 
+
+Получение меток конкретного пода   
+kubectl get pod <имя_пода> --show-labels   
+
 Получение списка всех подов с метками:    
 kubectl get pods --show-labels    
-
-Получение меток конкретного пода
-kubectl get pod <имя_пода> --show-labels
 
 ![pods](img/show_labels.png)
 
