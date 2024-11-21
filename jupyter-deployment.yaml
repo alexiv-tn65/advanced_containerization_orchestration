@@ -53,12 +53,12 @@ spec:
               key: POSTGRES_DB
         readinessProbe:
           httpGet:
-            path: /health  # Путь для проверки готовности Jupyter Notebook.
+            path: /  # Путь для проверки готовности Jupyter Notebook.
             port: 8888     # Порт, на котором работает Jupyter Notebook.
           initialDelaySeconds: 30 # Задержка перед первой проверкой готовности (в секундах).
           periodSeconds: 10       # Интервал между проверками готовности (в секундах).
           timeoutSeconds: 5       # Время ожидания ответа от проверки (по умолчанию 1 секунда).
-          failureThreshold: 5      # Количество неудачных проверок перед тем, как контейнер будет считаться неготовым.
+          failureThreshold: 8      # Количество неудачных проверок перед тем, как контейнер будет считаться неготовым.
       initContainers: # контейнеры-инициализаторы
       - name: wait-for-postgres # Инициализирующий контейнер для ожидания PostgreSQL
         image: busybox

@@ -60,10 +60,10 @@ minikube service jupyter-notebook-service --url
 
 Проверка логов init-контейнера:    
 
- <имя_пода> -c wait-for-postgres 
+kubectl logs <имя_пода> -c wait-for-postgres  
 
 
-![logs](img/get_logs.png)   
+![logs](img/get_logs_new.png)   
 
 Получение списка всех подов с метками:    
 kubectl get pods --show-labels    
@@ -71,7 +71,7 @@ kubectl get pods --show-labels
 Получение меток конкретного пода
 kubectl get pod <имя_пода> --show-labels
 
-![pods](img/get_pods.png)
+![pods](img/show_labels.png)
 
 ## Проверяем сервис
 
@@ -99,6 +99,12 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: jupyter-postgres-config
+  labels:
+    app: jupyter-notebook
+    tier: frontend
+    environment: production
+    version: v1.0
+    owner: dev-team
 data:
   JUPYTER_ENABLE_LAB: "yes"
 ```
@@ -110,6 +116,13 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: postgres-secret
+  labels: # Указываем метки для идентификации и организации ресурса
+    app: postgres # Название приложения, к которому относится секрет
+    tier: database # Уровень приложения (база данных)
+    environment: production # Среда развертывания (продакшн)
+    owner: dev-team # Команда, ответственная за секрет
+    version: v1.0 # Версия секрета (например, версия конфигурации)
+    purpose: credentials # Цель секрета (например, учетные данные для доступа к базе данных)
 type: Opaque  # тип секрета
 data:
   POSTGRES_DB: bXlkYXRhYmFzZQ== # base64
@@ -119,13 +132,19 @@ data:
 
 ```yaml
 # jupyter-deployment.yaml
+# ✅ Использование `labels`
+# ✅ Использование `initContainer`
+# ✅ Использование `readinessProbe`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jupyter-notebook-deployment
   labels: # задаем метки
-    app: jupyter-notebook
-    tier: frontend # ✅ Использование `labels`
+    app: jupyter-notebook # Лейбл, указывающий на название приложения
+    tier: frontend # Лейбл, указывающий на уровень приложения (фронтенд)
+    environment: production # Среда развертывания (продакшн)
+    version: v1.0 # Версия приложения
+    owner: dev-team # Команда, ответственная за приложение
 spec:
   replicas: 1 # количество реплик
   selector:
@@ -134,25 +153,56 @@ spec:
   template:
     metadata:
       labels:
-        app: jupyter-notebook
+        app: jupyter-notebook # Лейбл, который будет применен к создаваемым подам
         tier: frontend
+        environment: production # Среда развертывания для подов
+        version: v1.0 # Версия приложения для подов
+        owner: dev-team # Команда, ответственная за приложение
     spec:
       containers:
-      - name: jupyter-notebook
-        image: my-jupyter-notebook # имя собранного образа, ✅ Использование кастомного образа (`my-jupyter-notebook`)
-        imagePullPolicy: Never # явно указываем, что образ не будет загружаться из реестра
+      - name: jupyter-notebook # имя контейнера
+        image: my-jupyter-notebook # имя собранного образа Docker для Jupyter Notebook
+        imagePullPolicy: Never # явно указываем, что образ не будет загружаться из реестра, а используется локально
         ports:
-        - containerPort: 8888 # порт контейнера
+        - containerPort: 8888 # порт, на котором контейнер будет слушать входящие запросы (стандартный порт для Jupyter Notebook)
         env: # переменные окружения
-        - name: JUPYTER_ENABLE_LAB
+        - name: JUPYTER_ENABLE_LAB # Добавляем переменную окружения из ConfigMap
           valueFrom:
             configMapKeyRef: # ссылка на конфиг-мап
-              name: jupyter-postgres-config # имя конфиг-мап
+              name: jupyter-postgres-config # Используем созданный ConfigMap
               key: JUPYTER_ENABLE_LAB # ключ в конфиг-мапе
-      initContainers: # контейнер-инициализатор, ✅ Использование `initContainers`
-        - name: init-container
-          image: alpine:latest # образ для инициализации
-          command: ["sh", "-c", "echo 'Initialization complete'"] # команда для инициализации
+        - name: DATABASE_URL # Формируем URL подключения к базе данных
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres-service:5432/$(POSTGRES_DB)"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        readinessProbe:
+          httpGet:
+            path: /  # Путь для проверки готовности Jupyter Notebook.
+            port: 8888     # Порт, на котором работает Jupyter Notebook.
+          initialDelaySeconds: 30 # Задержка перед первой проверкой готовности (в секундах).
+          periodSeconds: 10       # Интервал между проверками готовности (в секундах).
+          timeoutSeconds: 5       # Время ожидания ответа от проверки (по умолчанию 1 секунда).
+          failureThreshold: 8      # Количество неудачных проверок перед тем, как контейнер будет считаться неготовым.
+      initContainers: # контейнеры-инициализаторы
+      - name: wait-for-postgres # Инициализирующий контейнер для ожидания PostgreSQL
+        image: busybox
+        command: ['sh', '-c', 'for i in {1..30}; do nc -z postgres-service 5432 && echo \
+        "Initialization complete: PostgreSQL database is operational." && exit 0; echo waiting for postgres; \
+        sleep 5; done; echo "PostgreSQL did not start in time!"; exit 1']
+
 ```
 
 ```yaml
@@ -165,26 +215,33 @@ metadata:
   labels:
     app: jupyter-notebook  
     tier: frontend
+    environment: production
+    version: v1.0
+    owner: dev-team
 spec:
-  type: NodePort # тип сервиса (node чтобы можно было обращаться к ноутбуку)
+  type: NodePort # тип сервиса
   ports:
-  - port: 8888 
-    targetPort: 8888 
-    nodePort: 30000
+  - port: 8888 # порт, на котором сервис будет доступен внутри кластера
+    targetPort: 8888  # порт, на который будет перенаправлен трафик к контейнеру
+    nodePort: 30000 # порт на узле, по которому сервис будет доступен извне
   selector:
-    app: jupyter-notebook 
+    app: jupyter-notebook # селектор, который связывает сервис с подами, имеющими метку app=jupyter-notebook
 ```
 
 ```yaml
 # postgres-deployment.yaml
-
+# ✅ Использование `volume`
+# ✅ Использование `readinessProbe`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres-deployment
   labels: # указываем метки
-    app: postgres
-    tier: database
+    app: postgres # Название приложения
+    tier: database # Уровень приложения (база данных)
+    environment: production # Среда развертывания (продакшн)
+    version: v1.0 # Версия приложения
+    owner: dev-team # Команда, ответственная за приложение
 spec:
   replicas: 1
   selector:
@@ -245,6 +302,8 @@ metadata:
   labels:
     app: postgres
     tier: database
+    environment: production 
+    owner: dev-team 
 spec:
   type: ClusterIP
   ports:
